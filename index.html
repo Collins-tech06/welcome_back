@@ -1,0 +1,1138 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="theme-color" content="#faf8f5">
+	<meta name="description" content="A little illustrated map of the miles, memories, and moments that led back to you.">
+	<title>The Road Back to You</title>
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;500;600;700&family=Patrick+Hand&display=swap" rel="stylesheet">
+	<style>
+		:root {
+			color-scheme: light;
+			--paper: #faf8f5;
+			--paper-deep: #f2ede5;
+			--ink: #34392f;
+			--muted: #77776a;
+			--green: #536b52;
+			--green-dark: #344b3c;
+			--sage: #a3b18a;
+			--orange: #e89874;
+			--rust: #bd694f;
+			--gold: #e7c579;
+			--line: #d8c9b3;
+			--hand: "Caveat", "Comic Sans MS", cursive;
+			--print: "Patrick Hand", "Trebuchet MS", sans-serif;
+			font-family: var(--print);
+			font-synthesis: none;
+			text-rendering: optimizeLegibility;
+		}
+
+		* { box-sizing: border-box; }
+		html { scroll-behavior: smooth; scroll-padding-top: 96px; }
+		body {
+			margin: 0;
+			color: var(--ink);
+			background-color: var(--paper);
+			background-image: radial-gradient(#90795b0c .8px, transparent .8px);
+			background-size: 11px 11px;
+			font-size: 18px;
+			line-height: 1.5;
+		}
+		button, a { font: inherit; }
+		button { color: inherit; }
+		button:focus-visible, a:focus-visible, dialog button:focus-visible {
+			outline: 3px solid var(--rust);
+			outline-offset: 4px;
+		}
+		::selection { color: var(--ink); background: #e8c37c88; }
+		.skip-link {
+			position: fixed;
+			z-index: 20;
+			top: 12px;
+			left: 12px;
+			padding: 8px 14px;
+			transform: translateY(-160%);
+			border-radius: 8px;
+			color: white;
+			background: var(--green-dark);
+		}
+		.skip-link:focus { transform: translateY(0); }
+
+		.topbar {
+			position: fixed;
+			z-index: 5;
+			top: 0;
+			left: 0;
+			display: flex;
+			width: 100%;
+			align-items: center;
+			justify-content: space-between;
+			padding: 22px clamp(20px, 5vw, 72px);
+		}
+		.map-back {
+			display: inline-flex;
+			min-height: 42px;
+			align-items: center;
+			gap: 7px;
+			margin-left: auto;
+			padding: 6px 12px;
+			border: 1px dashed #a8896d;
+			border-radius: 999px;
+			background: #fffdf8e8;
+			cursor: pointer;
+			transition: transform .2s, background .2s;
+		}
+		.map-back:hover { transform: translateY(-2px); background: white; }
+		.map-back svg { width: 17px; color: var(--rust); }
+		.map-back[hidden], .welcome-screen[hidden], .map-view[hidden] { display: none !important; }
+		body.map-open { overflow: hidden; }
+		body.map-open .topbar { background: #faf8f5ed; backdrop-filter: blur(10px); }
+		.map-view {
+			position: fixed;
+			z-index: 3;
+			inset: 0;
+			overflow-x: hidden;
+			overflow-y: auto;
+			padding-top: 82px;
+			background-color: var(--paper);
+			background-image: radial-gradient(#90795b0c .8px, transparent .8px);
+			background-size: 11px 11px;
+			overscroll-behavior-y: contain;
+			scrollbar-gutter: stable;
+		}
+		.map-view .journey { padding-top: 24px; }
+		.brand {
+			display: inline-flex;
+			align-items: center;
+			gap: 9px;
+			color: var(--green-dark);
+			font: 600 1.14rem var(--hand);
+			text-decoration: none;
+		}
+		.brand svg { width: 25px; color: var(--rust); }
+		.music-wrap { position: relative; }
+		.music-toggle {
+			display: inline-flex;
+			min-height: 42px;
+			align-items: center;
+			gap: 8px;
+			padding: 7px 13px;
+			border: 1px dashed #a8896d;
+			border-radius: 999px;
+			background: #fffdf8e8;
+			cursor: pointer;
+			transition: transform .2s, background .2s;
+		}
+		.music-toggle:hover { transform: rotate(-2deg) translateY(-2px); background: white; }
+		.music-toggle svg { width: 18px; color: var(--rust); }
+		.music-toggle[aria-expanded="true"] { background: #f4e8d7; }
+		.music-label { font-size: .88rem; }
+		.music-note {
+			position: absolute;
+			top: calc(100% + 12px);
+			right: 0;
+			width: min(310px, calc(100vw - 32px));
+			padding: 15px 17px;
+			border: 1px solid #d7c5ac;
+			border-radius: 12px 16px 13px 15px;
+			background: #fffdf8;
+			box-shadow: 0 12px 30px #49382218;
+			font-size: .92rem;
+		}
+		.music-note[hidden] { display: none; }
+		.music-note strong { display: block; color: var(--green-dark); }
+		.music-note p { margin: 4px 0 0; color: var(--muted); }
+		.mixtape-controls {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			gap: 10px;
+			margin-top: 12px;
+		}
+		.mixtape-control {
+			display: grid;
+			width: 38px;
+			height: 38px;
+			place-items: center;
+			padding: 0;
+			border: 1px solid #d7c5ac;
+			border-radius: 50%;
+			color: var(--green-dark);
+			background: #faf8f5;
+			cursor: pointer;
+		}
+		.mixtape-control svg { width: 17px; height: 17px; }
+		.mixtape-control--play {
+			width: 44px;
+			height: 44px;
+			color: white;
+			background: var(--green-dark);
+		}
+		.mixtape-control--play svg { width: 19px; height: 19px; }
+		.mixtape-control:disabled { opacity: .45; cursor: not-allowed; }
+		.mixtape-control:not(:disabled):hover { background: #f4e8d7; }
+		.mixtape-control--play:not(:disabled):hover { background: var(--green); }
+
+		.hero {
+			position: relative;
+			display: grid;
+			min-height: 620px;
+			place-items: center;
+			overflow: hidden;
+			padding: 118px 24px 76px;
+			text-align: center;
+			background:
+				radial-gradient(ellipse at 50% 0%, #e8c57921, transparent 58%),
+				linear-gradient(180deg, #f8f4eb 0%, var(--paper) 86%);
+		}
+		.hero::before, .hero::after {
+			position: absolute;
+			width: 220px;
+			height: 74px;
+			content: "";
+			opacity: .65;
+			background: repeating-linear-gradient(135deg, transparent 0 7px, #a3b18a4a 7px 9px);
+			pointer-events: none;
+		}
+		.hero::before { top: 21%; left: -98px; transform: rotate(-28deg); }
+		.hero::after { right: -94px; bottom: 16%; transform: rotate(-28deg); }
+		.hero-inner { position: relative; z-index: 1; width: min(100%, 800px); }
+		.postmark {
+			display: inline-block;
+			margin-bottom: 10px;
+			padding: 3px 13px;
+			transform: rotate(-4deg);
+			border: 1px dashed var(--rust);
+			border-radius: 50%;
+			color: var(--rust);
+			font-size: .82rem;
+			letter-spacing: .13em;
+			text-transform: uppercase;
+		}
+		h1, h2, h3, p { margin-top: 0; }
+		.hero h1 {
+			margin: 0;
+			color: var(--green-dark);
+			font: 700 clamp(3.4rem, 10vw, 7.5rem)/.83 var(--hand);
+			letter-spacing: -.045em;
+		}
+		.hero h1 span { display: block; color: var(--rust); font-size: .69em; }
+		.hero-copy {
+			margin: 27px auto 25px;
+			color: #68685c;
+			font: 1.15rem/1.5 var(--print);
+		}
+		.start-button {
+			display: inline-flex;
+			min-height: 52px;
+			align-items: center;
+			gap: 11px;
+			padding: 10px 23px;
+			transform: rotate(-1deg);
+			border: 1px solid #344b3c;
+			border-radius: 8px 14px 9px 13px;
+			color: #fffaf1;
+			background: var(--green);
+			box-shadow: 3px 4px 0 #344b3c2b;
+			text-decoration: none;
+			transition: transform .2s, box-shadow .2s, background .2s;
+		}
+		.start-button:hover { transform: rotate(1deg) translateY(-3px); background: var(--green-dark); box-shadow: 4px 7px 0 #344b3c24; }
+		.start-button svg { width: 17px; }
+		.hero-doodle {
+			position: absolute;
+			right: max(6%, calc((100vw - 1100px) / 2));
+			bottom: 52px;
+			width: 76px;
+			color: var(--orange);
+			transform: rotate(9deg);
+		}
+		.hero-star {
+			position: absolute;
+			top: 28%;
+			left: max(8%, calc((100vw - 1060px) / 2));
+			width: 27px;
+			color: var(--gold);
+			transform: rotate(-12deg);
+		}
+
+		.journey {
+			position: relative;
+			overflow: hidden;
+			padding: 92px 24px 106px;
+			background:
+				linear-gradient(90deg, transparent 49.9%, #a3b18a0c 50%, transparent 50.1%),
+				var(--paper);
+		}
+		.section-heading { position: relative; z-index: 2; margin: 0 auto 65px; text-align: center; }
+		.section-heading .eyebrow {
+			margin-bottom: 5px;
+			color: var(--rust);
+			font-size: .88rem;
+			letter-spacing: .14em;
+			text-transform: uppercase;
+		}
+		.section-heading h2 {
+			margin: 0;
+			color: var(--green-dark);
+			font: 600 clamp(2.7rem, 6vw, 4.5rem)/1 var(--hand);
+		}
+		.section-heading p { margin: 10px 0 0; color: var(--muted); }
+		.trail {
+			position: absolute;
+			z-index: 0;
+			top: 260px;
+			left: 50%;
+			width: min(930px, 92vw);
+			height: calc(100% - 340px);
+			min-height: 760px;
+			overflow: visible;
+			transform: translateX(-50%);
+			pointer-events: none;
+		}
+		.trail path {
+			fill: none;
+			stroke: #c7b694;
+			stroke-linecap: round;
+			stroke-width: 5;
+			stroke-dasharray: 2 15;
+			vector-effect: non-scaling-stroke;
+		}
+		.trail .trail-edge { stroke: #faf8f5; stroke-width: 11; stroke-dasharray: none; opacity: .9; }
+		.trail path:not(.trail-edge) { opacity: 0; stroke-dashoffset: 180; }
+		.journey.trail-visible .trail path:not(.trail-edge) { animation: trail-in 2.3s ease-out forwards; }
+		.milestones {
+			position: relative;
+			z-index: 1;
+			display: grid;
+			width: min(100%, 1010px);
+			grid-template-columns: minmax(0, 1fr) 94px minmax(0, 1fr);
+			align-items: center;
+			gap: 40px 22px;
+			margin: 0 auto;
+		}
+		.milestone {
+			position: relative;
+			min-height: 238px;
+			display: flex;
+			align-items: center;
+		}
+		.milestone:nth-of-type(odd) { grid-column: 1; }
+		.milestone:nth-of-type(even) { grid-column: 3; }
+		.milestone-card {
+			position: relative;
+			width: min(100%, 390px);
+			min-height: 200px;
+			padding: 22px 23px 19px;
+			overflow: visible;
+			border: 1px solid #d8c9b3;
+			border-radius: 4px 17px 7px 14px;
+			background: #fffdf9;
+			box-shadow: 2px 5px 13px #51432b10, 0 1px 2px #51432b0c;
+			text-align: left;
+			cursor: pointer;
+			transition: transform .22s ease, box-shadow .22s ease;
+		}
+		.milestone:nth-of-type(odd) .milestone-card { margin-left: auto; transform: rotate(-1.25deg); }
+		.milestone:nth-of-type(even) .milestone-card { margin-right: auto; transform: rotate(1.2deg); }
+		.milestone-card:hover { z-index: 3; transform: translateY(-7px) rotate(0deg) !important; box-shadow: 3px 12px 23px #51432b1c; }
+		.tape {
+			position: absolute;
+			top: -11px;
+			left: 50%;
+			width: 82px;
+			height: 23px;
+			transform: translateX(-50%) rotate(-3deg);
+			background: #e89874a6;
+			clip-path: polygon(0 7%, 100% 0, 96% 88%, 6% 100%);
+		}
+		.milestone:nth-of-type(even) .tape { background: #a3b18ab3; transform: translateX(-50%) rotate(3deg); }
+		.card-topline { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+		.waypoint-number { color: #928675; font-size: .79rem; letter-spacing: .1em; }
+		.sticker {
+			display: inline-block;
+			padding: 2px 9px;
+			transform: rotate(2deg);
+			border: 1px dashed #c78362;
+			border-radius: 999px;
+			color: #a85f49;
+			font-size: .77rem;
+		}
+		.milestone h3 { margin: 9px 0 5px; color: var(--green-dark); font: 600 1.65rem/1.05 var(--hand); }
+		.milestone-card p { margin: 0; color: #747267; font-size: .98rem; line-height: 1.35; }
+		.card-bottom { display: flex; align-items: center; justify-content: space-between; margin-top: 13px; color: var(--rust); font-size: .85rem; }
+		.card-bottom svg { width: 19px; }
+		.art {
+			display: block;
+			width: 94px;
+			height: 80px;
+			margin: 7px auto 0;
+			overflow: visible;
+		}
+		.node {
+			position: absolute;
+			z-index: 2;
+			top: 50%;
+			left: 50%;
+			display: grid;
+			width: 49px;
+			height: 49px;
+			place-items: center;
+			transform: translate(-50%, -50%);
+			border: 3px solid var(--paper);
+			border-radius: 50%;
+			color: #fffaf1;
+			background: var(--rust);
+			box-shadow: 0 0 0 2px #c78a69, 0 4px 9px #59472c24;
+			cursor: pointer;
+			transition: transform .2s, box-shadow .2s;
+		}
+		.milestone:nth-child(odd) .node { left: calc(100% + 69px); }
+		.milestone:nth-child(even) .node { left: -69px; }
+		.node:hover { transform: translate(-50%, -50%) scale(1.13) rotate(-8deg); box-shadow: 0 0 0 5px #e8987440, 0 4px 9px #59472c24; }
+		.node svg { width: 22px; }
+		.milestone:nth-of-type(2) .node { background: #667b58; box-shadow: 0 0 0 2px #81956d, 0 4px 9px #59472c24; }
+		.milestone:nth-of-type(4) .node { background: #72825c; box-shadow: 0 0 0 2px #9ba681, 0 4px 9px #59472c24; }
+		.milestone-destination { min-height: 258px; }
+		.milestone-destination .milestone-card {
+			border-color: #d5ba78;
+			background: linear-gradient(145deg, #fffdf8, #fbf4df);
+		}
+		.milestone-destination .node {
+			width: 62px;
+			height: 62px;
+			color: #fff5d3;
+			background: #c56f52;
+			box-shadow: 0 0 0 3px var(--paper), 0 0 0 6px #e9bb69, 0 0 25px #e9bb6977;
+			animation: destination-pulse 2.5s ease-in-out infinite;
+		}
+		.milestone-destination .node svg { width: 29px; }
+		.dest-label { color: #af673f; font-size: .8rem; letter-spacing: .1em; text-transform: uppercase; }
+		.sparkle {
+			position: absolute;
+			z-index: 2;
+			width: 21px;
+			color: #dfa94b;
+			pointer-events: none;
+			animation: sparkle 2.4s ease-in-out infinite;
+		}
+		.sparkle-a { top: 12px; right: 10px; }
+		.sparkle-b { bottom: 14px; left: -1px; width: 15px; animation-delay: .8s; }
+		.journey-footnote {
+			position: relative;
+			z-index: 1;
+			width: fit-content;
+			margin: 60px auto 0;
+			padding: 7px 15px;
+			transform: rotate(-1deg);
+			border-bottom: 1px dashed #b9a98e;
+			color: var(--muted);
+			font: 1.18rem var(--hand);
+		}
+
+		.reveal { opacity: 0; transform: translateY(20px); transition: opacity .65s ease, transform .65s ease; }
+		.reveal.is-visible { opacity: 1; transform: translateY(0); }
+
+		dialog {
+			width: min(540px, calc(100% - 32px));
+			max-width: none;
+			max-height: min(86vh, 760px);
+			padding: 0;
+			overflow: auto;
+			border: 1px solid #d4c2a6;
+			border-radius: 10px 22px 12px 18px;
+			color: var(--ink);
+			background: var(--paper);
+			box-shadow: 0 25px 90px #211e1890;
+		}
+		dialog::backdrop { background: #263329a6; backdrop-filter: blur(3px); }
+		.modal-paper {
+			position: relative;
+			overflow: hidden;
+			padding: 35px clamp(23px, 7vw, 44px) 32px;
+			background-image: radial-gradient(#90795b12 .8px, transparent .8px);
+			background-size: 11px 11px;
+		}
+		.welcome-letter {
+			position: relative;
+			margin-top: 20px;
+			padding: 23px clamp(17px, 5vw, 29px) 20px;
+			border: 1px dashed #d2bfa1;
+			border-radius: 5px 14px 7px 11px;
+			background: #fffdf8;
+			box-shadow: 2px 4px 12px #51432b10;
+			color: #56564d;
+			font-size: 1.06rem;
+			line-height: 1.7;
+		}
+		.welcome-letter::before {
+			position: absolute;
+			top: -9px;
+			left: 50%;
+			width: 76px;
+			height: 18px;
+			transform: translateX(-50%) rotate(-2deg);
+			background: #e89874a6;
+			clip-path: polygon(0 7%, 100% 0, 96% 88%, 6% 100%);
+			content: "";
+		}
+		.welcome-letter p { margin: 0 0 13px; }
+		.welcome-letter .letter-greeting {
+			color: var(--green-dark);
+			font: 600 1.55rem/1.1 var(--hand);
+		}
+		.welcome-letter .letter-signature {
+			margin: 17px 0 0;
+			color: #9e634f;
+			font: 600 1.55rem/1.1 var(--hand);
+		}
+		.modal-close {
+			position: absolute;
+			top: 13px;
+			right: 14px;
+			display: grid;
+			width: 38px;
+			height: 38px;
+			place-items: center;
+			border: 1px dashed #aa8e72;
+			border-radius: 50%;
+			background: #fffdf8;
+			cursor: pointer;
+			transition: transform .2s;
+		}
+		.modal-close:hover { transform: rotate(90deg); }
+		.modal-kicker { margin: 4px 0 4px; color: var(--rust); font-size: .83rem; letter-spacing: .13em; text-transform: uppercase; }
+		.modal-title { margin: 0 40px 13px 0; color: var(--green-dark); font: 600 clamp(2.3rem, 7vw, 3.5rem)/.95 var(--hand); }
+		.modal-description { margin: 0; color: #626257; font-size: 1.08rem; line-height: 1.55; }
+		.memory-gallery {
+			margin: 21px 0 23px;
+			padding: 16px;
+			border: 1px dashed #cdbb9f;
+			border-radius: 8px 14px 10px 13px;
+			background: #f5f0e7;
+		}
+		.memory-gallery[hidden] { display: none; }
+		.memory-gallery h3 {
+			margin: 0;
+			margin-bottom: 12px;
+			color: var(--green-dark);
+			font: 600 1.45rem/1 var(--hand);
+		}
+		.memory-gallery .gallery-hint { margin: -5px 0 12px; color: var(--muted); font-size: .88rem; }
+		.photo-grid {
+			display: grid;
+			grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+			gap: 10px;
+		}
+		.photo-tile {
+			position: relative;
+			min-width: 0;
+			aspect-ratio: 1;
+			overflow: hidden;
+			border: 1px solid #d2c2aa;
+			border-radius: 8px 11px 7px 10px;
+			background: #f0e9dc;
+			box-shadow: 1px 3px 7px #51432b12;
+		}
+		.photo-tile img {
+			display: block;
+			width: 100%;
+			height: 100%;
+			object-fit: cover;
+			cursor: zoom-in;
+			transition: transform .25s ease;
+		}
+		.photo-tile img:hover, .photo-tile img:focus-visible { transform: scale(1.1); }
+		#image-viewer {
+			width: min(96vw, 1200px);
+			max-height: 92vh;
+			padding: 0;
+			overflow: visible;
+			border: 0;
+			border-radius: 12px;
+			background: transparent;
+			box-shadow: none;
+		}
+		#image-viewer img {
+			display: block;
+			width: 100%;
+			max-height: 90vh;
+			object-fit: contain;
+			border-radius: 12px;
+		}
+		.image-viewer-close {
+			position: absolute;
+			z-index: 1;
+			top: 10px;
+			right: 10px;
+			display: grid;
+			width: 42px;
+			height: 42px;
+			place-items: center;
+			border: 1px solid #fff9e9;
+			border-radius: 50%;
+			color: #fff9e9;
+			background: #243b32d9;
+			font: 1.7rem/1 system-ui, sans-serif;
+			cursor: pointer;
+		}
+		.modal-memorabilia {
+			position: relative;
+			margin: 23px 0 0;
+			padding: 19px 20px 18px;
+			transform: rotate(-.6deg);
+			border-left: 3px solid var(--orange);
+			background: #f0e9dc;
+		}
+		.modal-memorabilia strong { display: block; margin-bottom: 4px; color: var(--green-dark); font: 600 1.4rem var(--hand); }
+		.modal-memorabilia p { margin: 0; color: #6a685e; }
+		.modal-signoff { margin: 18px 0 0; color: #9e634f; font: 1.4rem var(--hand); }
+		@keyframes destination-pulse { 50% { box-shadow: 0 0 0 3px var(--paper), 0 0 0 9px #e9bb6950, 0 0 34px #e9bb6980; } }
+		@keyframes sparkle { 50% { opacity: .4; transform: scale(.72) rotate(24deg); } }
+		@keyframes trail-in { to { opacity: .82; stroke-dashoffset: 0; } }
+
+		@media (min-width: 1000px) {
+			.milestone:nth-of-type(odd) .milestone-card { margin-right: 20px; }
+			.milestone:nth-of-type(even) .milestone-card { margin-left: 20px; }
+		}
+		@media (max-width: 680px) {
+			body { font-size: 17px; }
+			.topbar { padding: 15px 17px; }
+			.brand { font-size: 1rem; }
+			.map-back { min-height: 40px; padding: 6px 9px; }
+			.music-toggle { min-height: 40px; padding: 6px 10px; }
+			.music-label { font-size: .8rem; }
+			.hero { min-height: 570px; padding: 105px 19px 70px; }
+			.hero-doodle { right: 7%; bottom: 31px; width: 54px; }
+			.hero-star { top: 20%; left: 7%; width: 21px; }
+			.journey { padding: 70px 18px 75px; }
+			.section-heading { margin-bottom: 45px; }
+			.milestones { grid-template-columns: 46px minmax(0, 1fr); gap: 25px 13px; }
+			.milestone { grid-column: 2 !important; min-height: 190px; padding-left: 0; }
+			.milestone-card, .milestone:nth-of-type(odd) .milestone-card, .milestone:nth-of-type(even) .milestone-card {
+				width: 100%;
+				min-height: 176px;
+				margin: 0;
+				padding: 19px 17px 16px;
+				transform: rotate(.4deg);
+			}
+			.milestone:nth-of-type(even) .milestone-card { transform: rotate(-.5deg); }
+			.milestone:nth-child(odd) .node, .milestone:nth-child(even) .node { left: -37px; width: 43px; height: 43px; }
+			.milestone-destination .node { width: 52px; height: 52px; }
+			.node:hover { transform: translate(-50%, -50%) scale(1.1) rotate(-8deg); }
+			.trail {
+				top: 200px;
+				left: 18px;
+				width: 44px;
+				height: calc(100% - 280px);
+				min-height: 690px;
+				transform: none;
+			}
+			.trail path { stroke-width: 4; stroke-dasharray: 2 12; }
+			.trail .trail-edge { stroke-width: 9; }
+			.art { width: 76px; height: 65px; margin-top: 3px; }
+			.card-bottom { margin-top: 9px; }
+			.journey-footnote { margin-top: 42px; }
+		}
+		@media (max-width: 370px) {
+			.brand { gap: 5px; font-size: .9rem; }
+			.map-back { width: 40px; justify-content: center; padding: 6px; }
+			.map-back .back-label { display: none; }
+			.music-label { display: none; }
+			.milestones { grid-template-columns: 38px minmax(0, 1fr); gap: 22px 10px; }
+			.milestone:nth-child(odd) .node, .milestone:nth-child(even) .node { left: -26px; }
+		}
+		@media (prefers-reduced-motion: reduce) {
+			*, *::before, *::after {
+				scroll-behavior: auto !important;
+				animation-duration: .01ms !important;
+				animation-iteration-count: 1 !important;
+				transition-duration: .01ms !important;
+			}
+			.reveal { opacity: 1; transform: none; }
+			.trail path:not(.trail-edge) { opacity: .82; stroke-dashoffset: 0; animation: none !important; }
+		}
+	</style>
+</head>
+<body>
+	<a class="skip-link" href="#main">Skip to the journey</a>
+	<header class="topbar">
+		<a class="brand" href="#top" aria-label="The Road Back to You, home">
+			<svg viewBox="0 0 32 32" fill="none" aria-hidden="true"><path d="M16 27S4 19.3 4 11.6C4 5.3 12 3.4 16 9c4-5.6 12-3.7 12 2.6C28 19.3 16 27 16 27Z" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/><path d="m8 16 5-4 4 6 6-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+			<span>The Road Back to You</span>
+		</a>
+		<button class="map-back" id="map-back" type="button" hidden>
+			<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M19 12H5m0 0 6 6m-6-6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+			<span class="back-label">Back to welcome</span>
+		</button>
+		<div class="music-wrap">
+			<button class="music-toggle" id="music-toggle" type="button" aria-expanded="false" aria-controls="music-note">
+				<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 18V5l12-2v13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><ellipse cx="6" cy="18" rx="3" ry="2" stroke="currentColor" stroke-width="1.8"/><ellipse cx="18" cy="16" rx="3" ry="2" stroke="currentColor" stroke-width="1.8"/></svg>
+				<span class="music-label">Background music</span>
+			</button>
+			<div class="music-note" id="music-note" hidden>
+				<strong id="mixtape-title">Background music</strong>
+				<p id="mixtape-status" role="status" aria-live="polite">Track 1 of 6</p>
+				<div class="mixtape-controls" aria-label="Mixtape playback controls">
+					<button class="mixtape-control" id="mixtape-previous" type="button" aria-label="Previous track" title="Previous track" disabled>
+						<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6 5h2v14H6zm3 7 10-7v14z"/></svg>
+					</button>
+					<button class="mixtape-control mixtape-control--play" id="mixtape-play" type="button" aria-label="Play" title="Play" disabled>
+						<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
+					</button>
+					<button class="mixtape-control" id="mixtape-next" type="button" aria-label="Next track" title="Next track" disabled>
+						<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16 5h2v14h-2zM5 5v14l10-7z"/></svg>
+					</button>
+				</div>
+				<audio id="mixtape-audio" preload="none"></audio>
+			</div>
+		</div>
+	</header>
+
+	<main id="main">
+		<div class="welcome-screen" id="top">
+		<section class="hero" aria-labelledby="hero-title">
+			<svg class="hero-star" viewBox="0 0 32 32" fill="none" aria-hidden="true"><path d="M16 2c1.3 8.1 4.2 11 12 14-7.8 1.4-10.7 4.4-12 14C14.7 20.4 11.8 17.4 4 16 11.8 13 14.7 10.1 16 2Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>
+			<div class="hero-inner">
+				<p class="postmark">Delivered with all my love</p>
+				<h1 id="hero-title">THE ROAD <span>BACK TO YOU</span></h1>
+				<p class="hero-copy">The journey we’ve walked, even when miles apart.</p>
+				<button class="start-button" id="start-journey" type="button">
+					<span>Start our little journey</span>
+					<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 4v15m0 0 6-6m-6 6-6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+				</button>
+			</div>
+			<svg class="hero-doodle" viewBox="0 0 100 78" fill="none" aria-hidden="true"><path d="M8 60c16-18 26-21 43-16 13 4 21 0 35-21M67 18l20 5-4 19" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="m11 16 3 7 8 1-6 5 1 8-6-5-7 3 3-7-5-6 8 1 1-7Z" fill="currentColor"/></svg>
+		</section>
+		</div>
+
+		<div class="map-view" id="map-view" hidden>
+		<section class="journey" id="journey" aria-labelledby="journey-title">
+			<div class="section-heading reveal">
+				<p class="eyebrow">A tiny map of us</p>
+				<h2 id="journey-title" tabindex="-1">Our little big journey</h2>
+				<p>Every mile had a memory. Every road led here.</p>
+			</div>
+
+			<svg class="trail" viewBox="0 0 930 920" preserveAspectRatio="none" aria-hidden="true">
+				<path class="trail-edge" d="M465 20 C465 120 650 140 465 285 S270 430 465 570 S670 710 465 820"/>
+				<path d="M465 20 C465 120 650 140 465 285 S270 430 465 570 S670 710 465 820"/>
+			</svg>
+
+			<div class="milestones">
+				<article class="milestone reveal">
+					<button class="node" type="button" data-memory="beginning" aria-label="Open memory: Where It All Began" aria-haspopup="dialog">
+						<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 7.5 12 13l8-5.5M5 5h14a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M12 12.5c-2-1.5-4-3.2-4-5a2 2 0 0 1 4-1 2 2 0 0 1 4 1c0 1.8-2 3.5-4 5Z" fill="#f0bd82" stroke="currentColor" stroke-width="1"/></svg>
+					</button>
+					<button class="milestone-card" type="button" data-memory="beginning" aria-haspopup="dialog">
+						<span class="tape" aria-hidden="true"></span>
+						<span class="card-topline"><span class="waypoint-number">01 · THE FIRST HELLO</span><span class="sticker">our beginning</span></span>
+						<svg class="art" viewBox="0 0 110 85" fill="none" aria-hidden="true">
+							<path d="M21 28 55 48l34-20v37a6 6 0 0 1-6 6H27a6 6 0 0 1-6-6V28Z" fill="#e7bd72" stroke="#725e45" stroke-width="2.2" stroke-linejoin="round"/>
+							<path d="m21 29 28 20-28 17m68-37L61 49l28 17" stroke="#725e45" stroke-width="2.2" stroke-linejoin="round"/>
+							<path d="M54 37c-7-5-13-10-13-16 0-7 9-9 13-3 4-6 13-4 13 3 0 6-6 11-13 16Z" fill="#d9826b" stroke="#725e45" stroke-width="1.8"/>
+							<path d="m15 19 2 4 4 1-4 2-1 5-2-4-5-1 4-2 2-5Zm77 4 1 3 4 1-3 2-1 4-2-3-3-1 3-2 1-4Z" fill="#dfa94b"/>
+						</svg>
+						<h3>Where It All Began</h3>
+						<p>A simple hello that quietly became everything.</p>
+						<span class="card-bottom"><span>Open this memory</span><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+					</button>
+				</article>
+
+				<article class="milestone reveal">
+					<button class="node" type="button" data-memory="together" aria-label="Open memory: Our Time Together" aria-haspopup="dialog">
+						<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/><path d="M12 7v5l3 2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M18.5 4.5 20 3m-16 0 1.5 1.5" stroke="#f0bd82" stroke-width="1.8" stroke-linecap="round"/></svg>
+					</button>
+					<button class="milestone-card" type="button" data-memory="together" aria-haspopup="dialog">
+						<span class="tape" aria-hidden="true"></span>
+						<span class="card-topline"><span class="waypoint-number">02 · OUR LITTLE MOMENTS</span><span class="sticker">my favorite hours</span></span>
+						<svg class="art" viewBox="0 0 110 85" fill="none" aria-hidden="true">
+							<path d="M24 38h28v22a8 8 0 0 1-8 8h-12a8 8 0 0 1-8-8V38Z" fill="#e7bd72" stroke="#76664e" stroke-width="2" stroke-linejoin="round"/>
+							<path d="M52 43h5a7 7 0 0 1 0 14h-5" stroke="#76664e" stroke-width="2" stroke-linecap="round"/>
+							<path d="M59 42h27v19a8 8 0 0 1-8 8h-11a8 8 0 0 1-8-8V42Z" fill="#e89874" stroke="#76664e" stroke-width="2" stroke-linejoin="round"/>
+							<path d="M86 46h4a7 7 0 0 1 0 13h-5" stroke="#76664e" stroke-width="2" stroke-linecap="round"/>
+							<path d="M32 31c-4-5 4-7 0-12m14 12c-4-5 4-7 0-12m21 3c-3-4 3-6 0-10" stroke="#a3b18a" stroke-width="2" stroke-linecap="round"/>
+							<path d="M54 26c-4-3-7-6-7-9 0-4 5-5 7-1 2-4 7-3 7 1 0 3-3 6-7 9Z" fill="#d9826b" stroke="#76664e" stroke-width="1.4"/>
+							<path d="m18 20 2 4 4 1-4 2-1 4-2-4-4-1 4-2 1-4Zm72 1 2 4 4 1-4 2-1 4-2-4-4-1 4-2 1-4Z" fill="#dfa94b"/>
+						</svg>
+						<h3>Our Time Together</h3>
+						<p>The ordinary little moments with you are my favorite ones.</p>
+						<span class="card-bottom"><span>Open this memory</span><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+					</button>
+				</article>
+
+				<article class="milestone reveal">
+					<button class="node" type="button" data-memory="calls" aria-label="Open memory: Late Night Calls" aria-haspopup="dialog">
+						<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 5h16v12H4zM2 20h20" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><path d="M9 9h6M9 12h4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+					</button>
+					<button class="milestone-card" type="button" data-memory="calls" aria-haspopup="dialog">
+						<span class="tape" aria-hidden="true"></span>
+						<span class="card-topline"><span class="waypoint-number">03 · AFTER-HOURS CLUB</span><span class="sticker">you + me + wifi</span></span>
+						<svg class="art" viewBox="0 0 110 85" fill="none" aria-hidden="true">
+							<path d="M31 23h49a4 4 0 0 1 4 4v33H27V27a4 4 0 0 1 4-4Z" fill="#e8dfce" stroke="#536b52" stroke-width="2.2"/>
+							<path d="M21 64h69l-6 7H27l-6-7Z" fill="#a3b18a" stroke="#536b52" stroke-width="2"/>
+							<path d="M39 42a16 16 0 0 1 32 0v6H61v-6a6 6 0 0 0-12 0v6H39v-6Z" fill="#e89874" stroke="#705c48" stroke-width="2"/>
+							<path d="M39 43v8a5 5 0 0 0 5 5h4V45h-4a5 5 0 0 0-5 5Zm32 0v8a5 5 0 0 1-5 5h-4V45h4a5 5 0 0 1 5 5Z" fill="#e89874" stroke="#705c48" stroke-width="2"/>
+							<path d="m19 19 2 4 4 1-4 2-1 4-2-4-4-1 4-2 1-4Zm70-6 2 4 4 1-4 2-1 4-2-4-4-1 4-2 1-4Z" fill="#dfa94b"/>
+							<path d="m52 29 2 4 4 1-4 2-1 4-2-4-4-1 4-2 1-4Z" fill="#d9826b"/>
+						</svg>
+						<h3>Late Night Calls</h3>
+						<p>Laughing on screen until the sun started to peek.</p>
+						<span class="card-bottom"><span>Open this memory</span><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+					</button>
+				</article>
+
+				<article class="milestone milestone-destination reveal">
+					<button class="node" type="button" data-memory="home" aria-label="Open memory: Welcome back home" aria-haspopup="dialog">
+						<svg viewBox="0 0 32 32" fill="none" aria-hidden="true"><path d="M16 27S4 19.3 4 11.6C4 5.3 12 3.4 16 9c4-5.6 12-3.7 12 2.6C28 19.3 16 27 16 27Z" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/><path d="m10 15 4 4 8-8" stroke="#f4d99c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+					</button>
+					<button class="milestone-card" type="button" data-memory="home" aria-haspopup="dialog">
+						<span class="tape" aria-hidden="true"></span>
+						<svg class="sparkle sparkle-a" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 2c1 5 3 8 9 10-6 1-8 4-9 10-1-6-3-9-9-10 6-2 8-5 9-10Z" fill="currentColor"/></svg>
+						<svg class="sparkle sparkle-b" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 2c1 5 3 8 9 10-6 1-8 4-9 10-1-6-3-9-9-10 6-2 8-5 9-10Z" fill="currentColor"/></svg>
+						<span class="dest-label">The best part of the map</span>
+						<h3>Welcome back, love!</h3>
+						<svg class="art" viewBox="0 0 110 85" fill="none" aria-hidden="true">
+							<path d="M28 49c-9-9-11-20-4-25 7-4 13 1 16 8l6 14m36 3c9-9 11-20 4-25-7-4-13 1-16 8l-6 14" stroke="#c97a5e" stroke-width="6" stroke-linecap="round"/>
+							<path d="M45 41c-5-1-8 3-7 7l7 14c2 5 6 8 11 8s9-3 11-8l7-14c1-4-2-8-7-7l-8 6-7-6Z" fill="#e7bd72" stroke="#755e45" stroke-width="2"/>
+							<path d="M50 52c2 0 3 1 5 3 2-2 3-3 5-3" stroke="#755e45" stroke-width="1.7" stroke-linecap="round"/>
+							<path d="m19 17 2 4 5 1-4 2-1 5-2-4-5-1 4-2 1-5Zm72 8 2 4 5 1-4 2-1 5-2-4-5-1 4-2 1-5Z" fill="#dfa94b"/>
+							<path d="M53 13c1 4 2 6 6 7-4 1-5 3-6 7-1-4-2-6-6-7 4-1 5-3 6-7Z" fill="#d9826b"/>
+						</svg>
+						<p>All roads, all stories, all my favorite things lead to you.</p>
+						<span class="card-bottom"><span>Open your welcome home</span><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+					</button>
+				</article>
+			</div>
+		</section>
+
+		</div>
+	</main>
+
+	<dialog id="memory-dialog" aria-labelledby="modal-title">
+		<div class="modal-paper">
+			<button class="modal-close" type="button" aria-label="Close memory">×</button>
+			<p class="modal-kicker" id="modal-kicker"></p>
+			<h2 class="modal-title" id="modal-title"></h2>
+			<!-- Replace each placeholder src below with a path to your own image, for example src="images/our-photo.jpg". -->
+			<section class="memory-gallery" data-gallery="beginning" aria-labelledby="gallery-beginning-title" hidden>
+				<h3 id="gallery-beginning-title">Where It All Began · photo gallery</h3>
+				<p class="gallery-hint">A few snapshots from the start of us.</p>
+				<div class="photo-grid">
+					<figure class="photo-tile"><img src="Images/Photo%207.jpeg" alt="Where it all began, photo 7" loading="lazy"></figure>
+					<figure class="photo-tile"><img src="Images/Photo%208.jpeg" alt="Where it all began, photo 8" loading="lazy"></figure>
+					<figure class="photo-tile"><img src="Images/Photo%209.jpeg" alt="Where it all began, photo 9" loading="lazy"></figure>
+					<figure class="photo-tile"><img src="Images/Photo%2010.jpeg" alt="Where it all began, photo 10" loading="lazy"></figure>
+					<figure class="photo-tile"><img src="Images/Photo%2011.jpeg" alt="Where it all began, photo 11" loading="lazy"></figure>
+					<figure class="photo-tile"><img src="Images/Photo%2012.jpeg" alt="Where it all began, photo 12" loading="lazy"></figure>
+				</div>
+			</section>
+			<section class="memory-gallery" data-gallery="together" aria-labelledby="gallery-together-title" hidden>
+				<h3 id="gallery-together-title">Our Time Together · photo gallery</h3>
+				<p class="gallery-hint">Little moments I wish I could keep in my pocket.</p>
+				<div class="photo-grid">
+					<figure class="photo-tile"><img src="Images/Photo%2013.jpeg" alt="Our time together, photo 13" loading="lazy"></figure>
+					<figure class="photo-tile"><img src="Images/Photo%2014.jpeg" alt="Our time together, photo 14" loading="lazy"></figure>
+					<figure class="photo-tile"><img src="Images/Photo%2015.jpeg" alt="Our time together, photo 15" loading="lazy"></figure>
+					<figure class="photo-tile"><img src="Images/Photo%2016.jpeg" alt="Our time together, photo 16" loading="lazy"></figure>
+					<figure class="photo-tile"><img src="Images/Photo%2017.jpeg" alt="Our time together, photo 17" loading="lazy"></figure>
+					<figure class="photo-tile"><img src="Images/Photo%2018.jpeg" alt="Our time together, photo 18" loading="lazy"></figure>
+				</div>
+			</section>
+			<section class="memory-gallery" data-gallery="calls" aria-labelledby="gallery-calls-title" hidden>
+				<h3 id="gallery-calls-title">Late Night Calls · photo gallery</h3>
+				<p class="gallery-hint">Screenshots, sleepy smiles, and after-hours memories. Tap an image to view it.</p>
+				<div class="photo-grid">
+					<figure class="photo-tile"><img src="Images/Photo%201.jpeg" alt="Late night call memory, photo 1" loading="lazy"></figure>
+					<figure class="photo-tile"><img src="Images/Photo%202.jpeg" alt="Late night call memory, photo 2" loading="lazy"></figure>
+					<figure class="photo-tile"><img src="Images/Photo%203.jpeg" alt="Late night call memory, photo 3" loading="lazy"></figure>
+					<figure class="photo-tile"><img src="Images/Photo%204.jpeg" alt="Late night call memory, photo 4" loading="lazy"></figure>
+					<figure class="photo-tile"><img src="Images/Photo%205.jpeg" alt="Late night call memory, photo 5" loading="lazy"></figure>
+					<figure class="photo-tile"><img src="Images/Photo%206.jpeg" alt="Late night call memory, photo 6" loading="lazy"></figure>
+				</div>
+			</section>
+			<p class="modal-description" id="modal-description"></p>
+			<div class="modal-memorabilia">
+				<strong id="modal-memorabilia-title"></strong>
+				<p id="modal-memorabilia-copy"></p>
+			</div>
+			<p class="modal-signoff">Still my favorite person. ♡</p>
+			<div class="welcome-letter" id="welcome-letter" hidden>
+				<p class="letter-greeting">To my amazing Tess,</p>
+				<p>I hope you had an incredible time camping. Not being able to text you or hear your voice
+				 made these past few days feel incredibly slow. Being long-distance is already tough, 
+				 but you being completely offline made me realize just how much I rely on you to brighten my day.
+				  Since we never seem to stop and take pictures when we are finally in the same room, 
+				  I wanted to build this digital map to show you how much every moment of our journey means to me. 
+				  Welcome back. I have missed you so much.</p>
+				<p class="letter-signature">Yours, Collins.</p>
+			</div>
+		</div>
+	</dialog>
+	<dialog id="image-viewer" aria-label="Image preview">
+		<button class="image-viewer-close" type="button" aria-label="Close enlarged image">×</button>
+		<img id="image-viewer-photo" alt="">
+	</dialog>
+
+	<script>
+		const memories = {
+			beginning: {
+				kicker: "Waypoint 01 · The first hello",
+				title: "Where It All Began",
+				description: "The start of our story, where a simple “hello” became everything. I had no idea that one little conversation would turn into my favorite person.",
+				memorabiliaTitle: "A tiny message, a very big beginning",
+				memorabiliaCopy: "No grand opening scene needed. Just you, me, and the first hello I’m so glad we shared."
+			},
+			calls: {
+				kicker: "Waypoint 02 · After-hours club",
+				title: "Late Night Calls",
+				description: "Countless hours on screen, laughing until the sun started to peek. Distance had nothing on us—and neither did a reasonable bedtime.",
+				memorabiliaTitle: "The 3:00 AM playlist",
+				memorabiliaCopy: "No photos, just us listening to the same song from miles away. One song, two sleepy people, and somehow it felt like being together."
+			},
+			together: {
+				kicker: "Waypoint 03 · Our little moments",
+				title: "Our Time Together",
+				description: "The best parts of us were never about doing anything grand. Just being together, sharing little moments, and making anywhere feel like home.",
+				memorabiliaTitle: "The little things I keep close",
+				memorabiliaCopy: "Slow mornings, silly laughs, long talks, and all the ordinary moments that feel special because they're with you."
+			},
+			home: {
+				kicker: "Destination · You made it home",
+				title: "Welcome back, love!",
+				description: "All roads, all stories, all my favorite things lead to you. The best part of every adventure is getting to be together again.",
+				memorabiliaTitle: "Your welcome-home voucher",
+				memorabiliaCopy: "Redeem for one very long hug, your favorite cozy spot, and absolutely no plans unless you want them."
+			}
+		};
+
+		const dialog = document.querySelector("#memory-dialog");
+		const imageViewer = document.querySelector("#image-viewer");
+		const imageViewerPhoto = document.querySelector("#image-viewer-photo");
+		const imageViewerClose = imageViewer.querySelector(".image-viewer-close");
+		const modalKicker = document.querySelector("#modal-kicker");
+		const modalTitle = document.querySelector("#modal-title");
+		const modalDescription = document.querySelector("#modal-description");
+		const modalMemorabilia = dialog.querySelector(".modal-memorabilia");
+		const modalSignoff = dialog.querySelector(".modal-signoff");
+		const welcomeLetter = document.querySelector("#welcome-letter");
+		const memoryGalleries = document.querySelectorAll("[data-gallery]");
+		const closeButton = dialog.querySelector(".modal-close");
+		const musicToggle = document.querySelector("#music-toggle");
+		const musicNote = document.querySelector("#music-note");
+		const mixtapeTitle = document.querySelector("#mixtape-title");
+		const mixtapeStatus = document.querySelector("#mixtape-status");
+		const mixtapeAudio = document.querySelector("#mixtape-audio");
+		const mixtapePrevious = document.querySelector("#mixtape-previous");
+		const mixtapePlay = document.querySelector("#mixtape-play");
+		const mixtapeNext = document.querySelector("#mixtape-next");
+		const welcomeScreen = document.querySelector("#top");
+		const mapView = document.querySelector("#map-view");
+		const startJourney = document.querySelector("#start-journey");
+		const mapBack = document.querySelector("#map-back");
+		const mixtapeTracks = [
+			{ title: "Love Story", artist: "Indila · ViOLiNiA", url: "Indila - Love Story by ViOLiNiA.mp3" },
+			{ title: "Dandelions", url: "Dandelions.mp3" },
+			{ title: "Solo", artist: "Clean Bandit · Demi Lovato", url: "Clean Bandit - Solo ft. Demi Lovato.mp3" },
+			{ title: "Bad Habits", artist: "Ed Sheeran", url: "Ed Sheeran - Bad Habits.mp3" },
+			{ title: "I Took A Pill In Ibiza (Instrumental)", url: "I Took A Pill In Ibiza Instrumental.mp3" },
+			{ title: "What You Saying", artist: "Lil Uzi Vert", url: "Lil Uzi Vert - What You Saying.mp3" }
+		];
+		let currentMixtapeTrack = 0;
+		let imageViewerTrigger = null;
+		let lastTrigger = null;
+
+		function updateMixtapeTrack(index, autoplay = false) {
+			if (!mixtapeTracks.length) return;
+			currentMixtapeTrack = (index + mixtapeTracks.length) % mixtapeTracks.length;
+			const track = mixtapeTracks[currentMixtapeTrack];
+			mixtapeAudio.src = track.url;
+			mixtapeTitle.textContent = track.artist ? `${track.title} · ${track.artist}` : track.title;
+			mixtapeStatus.textContent = `Track ${currentMixtapeTrack + 1} of ${mixtapeTracks.length}`;
+			if (autoplay) {
+				mixtapeAudio.play().catch(() => {
+					mixtapeStatus.textContent = "This track couldn't be played. Check its audio URL and try again.";
+				});
+			}
+		}
+
+		function updateMixtapePlayback() {
+			const isPlaying = !mixtapeAudio.paused;
+			mixtapePlay.setAttribute("aria-label", isPlaying ? "Pause" : "Play");
+			mixtapePlay.title = isPlaying ? "Pause" : "Play";
+			mixtapePlay.innerHTML = isPlaying
+				? '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6 5h4v14H6zm8 0h4v14h-4z"/></svg>'
+				: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>';
+		}
+
+		if (mixtapeTracks.length) {
+			[mixtapePrevious, mixtapePlay, mixtapeNext].forEach(button => { button.disabled = false; });
+			updateMixtapeTrack(0);
+		}
+		mixtapePlay.addEventListener("click", () => {
+			if (mixtapeAudio.paused) {
+				mixtapeAudio.play().catch(() => {
+					mixtapeStatus.textContent = "This track couldn't be played. Check its audio URL and try again.";
+				});
+			} else {
+				mixtapeAudio.pause();
+			}
+		});
+		mixtapePrevious.addEventListener("click", () => updateMixtapeTrack(currentMixtapeTrack - 1, true));
+		mixtapeNext.addEventListener("click", () => updateMixtapeTrack(currentMixtapeTrack + 1, true));
+		mixtapeAudio.addEventListener("play", updateMixtapePlayback);
+		mixtapeAudio.addEventListener("pause", updateMixtapePlayback);
+		mixtapeAudio.addEventListener("ended", () => updateMixtapeTrack(currentMixtapeTrack + 1, true));
+		mixtapeAudio.addEventListener("error", () => {
+			mixtapeStatus.textContent = "This track couldn't be loaded. Check its audio URL and try again.";
+		});
+
+		function showMap() {
+			welcomeScreen.hidden = true;
+			mapView.hidden = false;
+			mapBack.hidden = false;
+			document.body.classList.add("map-open");
+			mapView.scrollTop = 0;
+			document.querySelector("#journey-title").focus({ preventScroll: true });
+		}
+
+		function showWelcome() {
+			mapView.hidden = true;
+			welcomeScreen.hidden = false;
+			mapBack.hidden = true;
+			document.body.classList.remove("map-open");
+			startJourney.focus();
+		}
+
+		startJourney.addEventListener("click", showMap);
+		mapBack.addEventListener("click", showWelcome);
+		document.querySelector(".brand").addEventListener("click", event => {
+			event.preventDefault();
+			if (mapView.hidden) {
+				window.scrollTo({ top: 0, behavior: "smooth" });
+			} else {
+				showWelcome();
+			}
+		});
+
+		function openMemory(key, trigger) {
+			const memory = memories[key];
+			if (!memory) return;
+			lastTrigger = trigger;
+			memoryGalleries.forEach(gallery => {
+				gallery.hidden = gallery.dataset.gallery !== key;
+			});
+			const isWelcomeLetter = key === "home";
+			modalKicker.textContent = isWelcomeLetter ? "A little note, written just for you" : memory.kicker;
+			modalTitle.textContent = isWelcomeLetter ? "A letter for you" : memory.title;
+			modalDescription.hidden = isWelcomeLetter;
+			modalMemorabilia.hidden = isWelcomeLetter || key === "calls";
+			modalSignoff.hidden = isWelcomeLetter;
+			welcomeLetter.hidden = !isWelcomeLetter;
+			modalDescription.textContent = memory.description;
+			document.querySelector("#modal-memorabilia-title").textContent = memory.memorabiliaTitle;
+			document.querySelector("#modal-memorabilia-copy").textContent = memory.memorabiliaCopy;
+			dialog.showModal();
+			closeButton.focus();
+		}
+
+		document.querySelectorAll("[data-memory]").forEach(trigger => {
+			trigger.addEventListener("click", () => openMemory(trigger.dataset.memory, trigger));
+		});
+
+		document.querySelectorAll(".memory-gallery .photo-tile img").forEach(image => {
+			image.tabIndex = 0;
+			image.setAttribute("role", "button");
+			image.setAttribute("aria-haspopup", "dialog");
+			image.setAttribute("aria-label", `View larger image: ${image.alt || "Photo"}`);
+		});
+		function openImageViewer(image) {
+			imageViewerTrigger = image;
+			imageViewerPhoto.src = image.currentSrc || image.src;
+			imageViewerPhoto.alt = image.alt;
+			imageViewer.showModal();
+			imageViewerClose.focus();
+		}
+		dialog.addEventListener("click", event => {
+			if (event.target instanceof Element) {
+				const image = event.target.closest(".memory-gallery .photo-tile img");
+				if (image) openImageViewer(image);
+			}
+		});
+		dialog.addEventListener("keydown", event => {
+			if ((event.key === "Enter" || event.key === " ") && event.target instanceof HTMLImageElement) {
+				event.preventDefault();
+				openImageViewer(event.target);
+			}
+		});
+		imageViewerClose.addEventListener("click", () => imageViewer.close());
+		imageViewer.addEventListener("click", event => {
+			if (event.target === imageViewer) imageViewer.close();
+		});
+		imageViewer.addEventListener("close", () => {
+			if (imageViewerTrigger?.isConnected) imageViewerTrigger.focus();
+		});
+		closeButton.addEventListener("click", () => dialog.close());
+		dialog.addEventListener("click", event => {
+			if (event.target === dialog) dialog.close();
+		});
+		dialog.addEventListener("close", () => {
+			if (lastTrigger) lastTrigger.focus();
+		});
+
+		musicToggle.addEventListener("click", () => {
+			const expanded = musicToggle.getAttribute("aria-expanded") === "true";
+			musicToggle.setAttribute("aria-expanded", String(!expanded));
+			musicNote.hidden = expanded;
+		});
+		document.addEventListener("click", event => {
+			if (!event.target.closest(".music-wrap")) {
+				musicToggle.setAttribute("aria-expanded", "false");
+				musicNote.hidden = true;
+			}
+		});
+		document.addEventListener("keydown", event => {
+			if (event.key === "Escape") {
+				if (imageViewer.open) {
+					event.preventDefault();
+					imageViewer.close();
+				} else if (dialog.open) {
+					event.preventDefault();
+					dialog.close();
+				} else {
+					musicToggle.setAttribute("aria-expanded", "false");
+					musicNote.hidden = true;
+				}
+			}
+		});
+
+		const revealTargets = document.querySelectorAll(".reveal");
+		const journey = document.querySelector("#journey");
+		const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+		if ("IntersectionObserver" in window && !reduceMotion.matches) {
+			const trailObserver = new IntersectionObserver(entries => {
+				if (entries.some(entry => entry.isIntersecting)) {
+					journey.classList.add("trail-visible");
+					trailObserver.disconnect();
+				}
+			}, { threshold: 0.08 });
+			trailObserver.observe(journey);
+
+			const revealObserver = new IntersectionObserver(entries => {
+				entries.forEach(entry => {
+					if (entry.isIntersecting) {
+						entry.target.classList.add("is-visible");
+						revealObserver.unobserve(entry.target);
+					}
+				});
+			}, { threshold: 0.12 });
+			revealTargets.forEach(target => revealObserver.observe(target));
+		} else {
+			revealTargets.forEach(target => target.classList.add("is-visible"));
+		}
+	</script>
+</body>
+</html>
